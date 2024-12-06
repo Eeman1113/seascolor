@@ -114,7 +114,7 @@ def analyze_image_colors(img):
     for i, (color, undertone, season) in enumerate(zip(colors, undertones, seasonal_types)):
         cluster_details.append({
             'Cluster': i,
-            'RGB Color': color,
+            'RGB Color': [round(c, 2) for c in color],
             'Undertone': undertone,
             'Seasonal Type': season
         })
@@ -122,30 +122,48 @@ def analyze_image_colors(img):
     return buf, cluster_details
 
 def main():
-    st.title('Image Color Analysis Tool')
+    st.set_page_config(page_title="Color Analysis Tool", layout="wide")
+    
+    st.title('🎨 Image Color Analysis Tool')
+    
+    # Sidebar for additional instructions
+    st.sidebar.header("How to Use")
+    st.sidebar.info(
+        "1. Upload an image\n"
+        "2. Wait for color analysis\n"
+        "3. Explore color clusters and distributions"
+    )
     
     # File uploader
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.file_uploader(
+        "Choose an image...", 
+        type=["jpg", "jpeg", "png"],
+        help="Upload an image to analyze its color composition"
+    )
     
     if uploaded_file is not None:
-        # Display the uploaded image
-        image = Image.open(uploaded_file)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
+        # Create two columns
+        col1, col2 = st.columns(2)
         
-        # Analyze colors
-        st.write('Analyzing image colors...')
-        plot_buffer, cluster_details = analyze_image_colors(image)
+        with col1:
+            # Display the uploaded image
+            st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
         
-        # Display analysis plot
-        st.image(plot_buffer, caption='Color Analysis Visualization')
+        with col2:
+            # Analyze colors
+            st.write('🔍 Analyzing image colors...')
+            image = Image.open(uploaded_file)
+            plot_buffer, cluster_details = analyze_image_colors(image)
+            
+            # Display analysis plot
+            st.image(plot_buffer, caption='Color Analysis Visualization')
         
         # Display cluster details
-        st.subheader('Color Cluster Details')
-        for cluster in cluster_details:
-            st.write(f"**Cluster {cluster['Cluster']}:**")
-            st.write(f"  - RGB Color: {cluster['RGB Color']}")
-            st.write(f"  - Undertone: {cluster['Undertone']}")
-            st.write(f"  - Seasonal Type: {cluster['Seasonal Type']}")
+        st.subheader('🌈 Color Cluster Details')
+        
+        # Create a more readable table
+        cluster_df = pd.DataFrame(cluster_details)
+        st.dataframe(cluster_df, use_container_width=True)
 
 if __name__ == '__main__':
     main()
